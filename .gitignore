@@ -12,7 +12,6 @@ ndll/*/*.lib
 ndll/*/hl*
 ndll/*/*.dll
 project/vc*.pdb
-project/obj
 project/all_objs
 *.userprefs
 *.swp
@@ -20,4 +19,3 @@ project/all_objs
 note_modules
 .vscode/
 tests/**/bin/
-project/lib/
