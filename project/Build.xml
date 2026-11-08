@@ -7,20 +7,22 @@
 	<files id="haxe">
 		<section unless="linux">
 			<compilerflag value="-I${PROJECT_DIR}/include" />
-            <file name="${PROJECT_DIR}/src/lua_base.cpp" />
 		</section>
 	</files>
 
 	<files id="__main__">
 		<section unless="linux">
 			<compilerflag value="-I${PROJECT_DIR}/include" />
-            <file name="${PROJECT_DIR}/src/lua_base.cpp" />
 		</section>
 	</files>
 
 	<target id="haxe">
 		<section if="windows">
 			<section if="HXCPP_M64">
+				<lib name="${PROJECT_DIR}/lib/Windows64/lua51.lib" />
+			</section>
+
+			<section unless="HXCPP_M64">
 				<lib name="${PROJECT_DIR}/lib/Windows/lua51.lib" />
 			</section>
 		</section>

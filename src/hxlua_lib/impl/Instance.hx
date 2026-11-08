@@ -1,4 +1,4 @@
-package src.hxlua_lib.impl;
+package hxlua_lib.impl;
 
 import cpp.CastCharStar;
 import cpp.ConstCharStar;
@@ -22,7 +22,9 @@ class Instance {
 
     public function new():Void
     {
-        trace(Lua.version());
+        nativeInstance = Lua.newstate();
+
+        trace(Lua.version(nativeInstance));
         //nativeInstance = Lua.createstate();
     }
 }

@@ -9,7 +9,13 @@
 	</section>
 
 	<section if="windows">
-		<assets path="project/lib/Windows" rename="" include="*.dll" library="luajit" />
+		<section if="32bits">
+			<assets path="project/lib/Windows" rename="" include="*.dll" library="luajit" />
+		</section>
+
+		<section unless="32bits">
+			<assets path="project/lib/Windows64" rename="" include="*.dll" library="luajit" />
+		</section>
 	</section>
 
 	<section if="mac">
@@ -18,19 +24,10 @@
 
 	<section if="android">
 		<ndll name="c++_shared" dir="project/lib" />
-		<ndll name="vlc" dir="project/lib" />
+		<ndll name="lua" dir="project/lib" />
 	</section>
 
 	<section if="ios">
-		<dependency name="CFNetwork.framework" />
-		<dependency name="CoreFoundation.framework" />
-		<dependency name="CoreMedia.framework" />
-		<dependency name="CoreText.framework" />
-		<dependency name="CoreVideo.framework" />
-		<dependency name="Security.framework" />
-		<dependency name="VideoToolbox.framework" />
-		<dependency name="CoreImage.framework" />
-
 		<dependency name="libiconv.tbd" />
 	</section>
 
