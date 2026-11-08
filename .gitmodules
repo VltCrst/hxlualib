@@ -1,4 +1,4 @@
-[submodule "project/lib/luacpp"]
-    path = project/lib/luacpp
-    url = https://github.com/jordanvrtanoski/luacpp
+[submodule "project/lib/luajit"]
+    path = project/lib/luajit
+    url = https://luajit.org/git/luajit.git
     shallow = true

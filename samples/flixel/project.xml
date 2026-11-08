@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+	xmlns="http://lime.openfl.org/project/1.0.4"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/xsd/project-1.0.4.xsd">
+
+	<!--Application Settings-->
+
+	<meta title="hxLua Library Sample (Flixel)" packageName="com.vltcrst.hxlualib.flixel" package="com.vltcrst.hxlualib.flixel" version="0.0.1" company="VioletCrystal" />
+
+	<app file="Sample" main="Main" path="export" preloader="flixel.system.FlxPreloader" />
+
+	<!--Architecture Settings-->
+
+	<architecture name="arm64" exclude="armv7" if="android" />
+
+	<!--Window Settings-->
+
+	<window orientation="landscape" width="1280" height="720" fps="60" background="#000000" hardware="true" vsync="false" fullscreen="false" resizable="true" />
+
+	<window fullscreen="true" resizable="false" if="mobile" />
+
+	<!--Path Settings-->
+
+	<assets path="assets" />
+
+	<source path="source" />
+
+	<!--Libraries-->
+
+	<haxelib name="flixel" />
+
+	<section if="cpp">
+		<haxelib name="hxlua_lib" if="desktop || mobile" />
+	</section>
+
+	<haxelib name="hxcpp-debug-server" if="debug" unless="mobile" optional="true" />
+
+	<!--Libraries Settings-->
+
+	<haxedef name="FLX_NO_TOUCH" if="desktop" />
+	<haxedef name="FLX_NO_DEBUG" unless="debug" />
+
+	<!--Undefinitions-->
+
+	<undefine name="openfl-disable-handle-error" if="debug" />
+
+	<!--Code Cleanup and Full Compile of Classes-->
+
+	<haxeflag name="-dce" value="full" />
+
+	<haxeflag name="--macro" value="include('hxlua_lib')" />
+
+	<!--Pretty Message Reporting-->
+
+	<haxedef name="message.reporting" value="pretty" />
+
+	<!--Analyzer Optimization-->
+
+	<haxedef name="analyzer-optimize" />
+</project>

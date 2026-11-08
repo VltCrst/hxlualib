@@ -1,14 +1,40 @@
-<?xml version="1.0" encoding="utf-8"?>
-<extension>
-	<log error="Lua Library ${lime} is not compatible with Haxe ${haxe} (version 3.2.0 or higher is required)" if="${haxe < 3.2.0}" />
+<?xml version="1.0" encoding="UTF-8"?>
+<extension
+	xmlns="http://lime.openfl.org/project/1.0.4"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/xsd/project-1.0.4.xsd">
 
-	<log error="Lua Library ${lime} requires Haxe 4 to target HashLink (version ${haxe} found)" if="hl ${${haxe} < 4.0}" />
+	<section if="windows || mac">
+		<library name="luajit" preload="false" />
+	</section>
 
-	<set name="hxlua_lib" />
+	<section if="windows">
+		<assets path="project/lib/Windows" rename="" include="*.dll" library="luajit" />
+	</section>
 
-	<define name="native" if="cpp || neko || nodejs || cs || java || hl" />
-	<define name="howlerjs" if="html5" />
+	<section if="mac">
+		<assets path="project/lib/MacOS" rename="../MacOS/lib" include="*.dylib" library="luajit" />
+	</section>
 
-	<haxelib name="hxcpp" if="setup" />
-	<ndll name="hxlua_lib" if="native" />
+	<section if="android">
+		<ndll name="c++_shared" dir="project/lib" />
+		<ndll name="vlc" dir="project/lib" />
+	</section>
+
+	<section if="ios">
+		<dependency name="CFNetwork.framework" />
+		<dependency name="CoreFoundation.framework" />
+		<dependency name="CoreMedia.framework" />
+		<dependency name="CoreText.framework" />
+		<dependency name="CoreVideo.framework" />
+		<dependency name="Security.framework" />
+		<dependency name="VideoToolbox.framework" />
+		<dependency name="CoreImage.framework" />
+
+		<dependency name="libiconv.tbd" />
+	</section>
+
+	<sample path="samples" />
+
+	<source path="src" />
 </extension>

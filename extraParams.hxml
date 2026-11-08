@@ -1,0 +1,2 @@
+--macro nullSafety('hxlua_lib')
+--macro hxlua_lib.util.macros.CheckMacro.run()

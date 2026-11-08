@@ -1,0 +1,1 @@
+lime rebuild . windows -64 -release -nocolor -verbose -nocffi
