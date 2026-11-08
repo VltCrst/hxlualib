@@ -1,0 +1,4 @@
+[submodule "project/lib/luacpp"]
+    path = project/lib/luacpp
+    url = https://github.com/jordanvrtanoski/luacpp
+    shallow = true

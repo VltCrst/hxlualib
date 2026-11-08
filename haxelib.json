@@ -1,0 +1,11 @@
+{
+    "name": "hxlua_lib",
+    "url": "https://github.com/VltCrst/hxlua_lib",
+    "license": "Apache-2.0",
+    "tags": ["script", "lua", "cpp"],
+    "description": "C++ Lua library for Lime/OpenFL projects.",
+    "version": "0.1.0",
+    "releasenote": "Starting library.",
+    "contributors": ["VltCrst"],
+    "classPath": "src"
+}
