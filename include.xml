@@ -23,15 +23,11 @@
 	</section>
 
 	<section if="android">
-		<ndll name="c++_shared" dir="project/lib" />
-		<ndll name="lua" dir="project/lib" />
 	</section>
 
 	<section if="ios">
-		<dependency name="libiconv.tbd" />
 	</section>
 
 	<sample path="samples" />
-
 	<source path="src" />
 </extension>

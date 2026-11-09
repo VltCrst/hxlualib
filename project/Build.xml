@@ -22,7 +22,7 @@
 				<lib name="${PROJECT_DIR}/lib/Windows64/lua51.lib" />
 			</section>
 
-			<section unless="HXCPP_M64">
+			<section if="HXCPP_M32">
 				<lib name="${PROJECT_DIR}/lib/Windows/lua51.lib" />
 			</section>
 		</section>
@@ -31,42 +31,30 @@
 			<vflag name="-rpath" value="@executable_path/lib/" />
 
 			<section if="HXCPP_M64 || HXCPP_ARM64">
-				<lib name="${PROJECT_DIR}/lib/MacOS/libvlc.dylib" />
-				<lib name="${PROJECT_DIR}/lib/MacOS/libvlccore.dylib" />
 			</section>
 		</section>
 
 		<section if="linux">
-			<lib name="-lvlc" />
-			<lib name="-lvlccore" />
 		</section>
 
 		<section if="android">
-			<lib name="${PROJECT_DIR}/lib/Android/libvlc-64.so" if="HXCPP_ARM64" />
-			<lib name="${PROJECT_DIR}/lib/Android/libvlc-v7.so" if="HXCPP_ARMV7" />
-			<lib name="${PROJECT_DIR}/lib/Android/libvlc-x86.so" if="HXCPP_X86" />
-			<lib name="${PROJECT_DIR}/lib/Android/libvlc-x86_64.so" if="HXCPP_X86_64" />
 		</section>
 
 		<section if="iphoneos || iphonesim">
 			<section if="HXCPP_ARM64">
 				<section if="iphoneos">
 					<section unless="HXVLC_CUSTOM_IOS_DEVICE_LIB">
-						<lib name="${PROJECT_DIR}/lib/iOS/libvlc_device.a" />
 					</section>
 
 					<section if="HXVLC_CUSTOM_IOS_DEVICE_LIB">
-						<lib name="${HXVLC_CUSTOM_IOS_DEVICE_LIB}" />
 					</section>
 				</section>
 
 				<section if="iphonesim || simulator">
 					<section unless="HXVLC_CUSTOM_IOS_SIMULATOR_LIB">
-						<lib name="${PROJECT_DIR}/lib/iOS/libvlc_sim.a" />
 					</section>
 
 					<section if="HXVLC_CUSTOM_IOS_SIMULATOR_LIB">
-						<lib name="${HXVLC_CUSTOM_IOS_SIMULATOR_LIB}" />
 					</section>
 				</section>
 			</section>

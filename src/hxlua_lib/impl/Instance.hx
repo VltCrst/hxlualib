@@ -1,5 +1,11 @@
 package hxlua_lib.impl;
 
+#if !cpp
+#error "Haxelib 'hxlua_lib' supported only in C++ platforms."
+#end
+
+import cpp.Pointer;
+import hxlua_lib.util.Types;
 import cpp.CastCharStar;
 import cpp.ConstCharStar;
 import cpp.Function;
@@ -16,15 +22,13 @@ import haxe.io.Path;
 
 import hxlua_lib.impl.externs.Lua;
 
+@:cppInclude('stdarg.h')
 class Instance {
     @:noCompletion
-    public var nativeInstance:Null<RawPointer<Lua_State>>;
+    public var state:Null<RawPointer<Lua_State>>;
 
     public function new():Void
     {
-        nativeInstance = Lua.newstate();
-
-        trace(Lua.version(nativeInstance));
-        //nativeInstance = Lua.createstate();
+        state = Lua.lua_open();
     }
 }
