@@ -7,6 +7,14 @@ package hxlua_lib.util;
 enum abstract Types(Int) from Int to Int
 {
     var LUA_MINSTACK = 20;
+    var LUA_MULTRET = -1;
+}
+
+enum abstract LuaJITModes(Int) from Int to Int
+{
+    var LUAJIT_MODE_OFF = 0x0000;
+    var LUAJIT_MODE_ON = 0x0100;
+    var LUAJIT_MODE_FLUSH = 0x0200;
 }
 
 enum abstract LuaGCType(Int) from Int to Int

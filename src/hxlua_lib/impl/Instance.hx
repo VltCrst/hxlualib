@@ -5,7 +5,6 @@ package hxlua_lib.impl;
 #end
 
 import cpp.Pointer;
-import hxlua_lib.util.Types;
 import cpp.CastCharStar;
 import cpp.ConstCharStar;
 import cpp.Function;
@@ -21,11 +20,13 @@ import haxe.extern.AsVar;
 import haxe.io.Path;
 
 import hxlua_lib.impl.externs.Lua;
+import hxlua_lib.util.Types;
 
+// TODO: Complete with more methods and some helpers here
 @:cppInclude('stdarg.h')
 class Instance {
     @:noCompletion
-    public var state:Null<RawPointer<Lua_State>>;
+    public var state:Null<Lua_State>;
 
     public function new():Void
     {

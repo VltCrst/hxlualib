@@ -5,16 +5,16 @@
 	<set name="PROJECT_DIR" value="${haxelib:hxlua_lib}/project" />
 
 	<files id="haxe">
-		<section unless="linux">
-			<compilerflag value="-I${PROJECT_DIR}/include" />
-		</section>
+		<compilerflag value="-I${PROJECT_DIR}/include" />
 	</files>
 
 	<files id="__main__">
-		<section unless="linux">
-			<compilerflag value="-I${PROJECT_DIR}/include" />
-		</section>
+		<compilerflag value="-I${PROJECT_DIR}/include" />
 	</files>
+
+	<section id="vars">
+		<set name="NO_PRECOMPILED_HEADERS" value="1"/>
+	</section>
 
 	<target id="haxe">
 		<section if="windows">
@@ -31,31 +31,31 @@
 			<vflag name="-rpath" value="@executable_path/lib/" />
 
 			<section if="HXCPP_M64 || HXCPP_ARM64">
+				<lib name="${PROJECT_DIR}/lib/Mac/lua51.a"/>
 			</section>
 		</section>
 
 		<section if="linux">
+			<section if="HXCPP_M64">
+				<lib name="${PROJECT_DIR}/lib/Linux64/lua51.a" />
+			</section>
 		</section>
 
 		<section if="android">
+			<lib name='${PROJECT_DIR}/lib/Android/lua51-v7.a' if='HXCPP_ARMV7' />
+            <lib name='${PROJECT_DIR}/lib/Android/lua51-x86.a' if='HXCPP_X86' />
+            <lib name='${PROJECT_DIR}/lib/Android/lua51-x86_64.a' if='HXCPP_X86_64' />
+            <lib name='${PROJECT_DIR}/lib/Android/lua51-64.a' if='HXCPP_ARM64' />
 		</section>
 
 		<section if="iphoneos || iphonesim">
 			<section if="HXCPP_ARM64">
 				<section if="iphoneos">
-					<section unless="HXVLC_CUSTOM_IOS_DEVICE_LIB">
-					</section>
-
-					<section if="HXVLC_CUSTOM_IOS_DEVICE_LIB">
-					</section>
+					<lib name="${PROJECT_DIR}/lib/iOS/lua51.iphoneos-64.a"/>
 				</section>
 
 				<section if="iphonesim || simulator">
-					<section unless="HXVLC_CUSTOM_IOS_SIMULATOR_LIB">
-					</section>
-
-					<section if="HXVLC_CUSTOM_IOS_SIMULATOR_LIB">
-					</section>
+					<lib name="${PROJECT_DIR}/lib/iOS/lua51.iphonesim-64.a"/>
 				</section>
 			</section>
 		</section>

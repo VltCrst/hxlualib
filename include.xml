@@ -19,7 +19,6 @@
 	</section>
 
 	<section if="mac">
-		<assets path="project/lib/MacOS" rename="../MacOS/lib" include="*.dylib" library="luajit" />
 	</section>
 
 	<section if="android">
