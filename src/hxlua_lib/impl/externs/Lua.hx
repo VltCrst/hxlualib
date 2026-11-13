@@ -4,6 +4,7 @@ package hxlua_lib.impl.externs;
 #error "Haxelib 'hxlua_lib' supported only in C++ platforms."
 #end
 
+import cpp.Char;
 import cpp.ConstCharStar;
 import cpp.Int64;
 import cpp.RawConstPointer;
@@ -32,75 +33,7 @@ extern class LuaL_Buffer {
 }
 
 @:buildXml('<include name="${haxelib:hxlua_lib}/project/Build.xml" />')
-@:include('lua.hpp')
-@:headerCode('
-    typedef ::cpp::Function < int(::cpp::Reference<lua_State>, ::String) > luaCallbackFun;
-    typedef ::cpp::Function < int(String) > HxTraceFun;
-
-    static luaCallbackFun event_fun = 0;
-    static int luaCallback(lua_State *L) {
-        return event_fun(L, ::String(lua_tostring(L, lua_upvalueindex(1))));
-    }
-
-    static int onError(lua_State *L) {
-        const char *msg = lua_tostring(L, 1);
-
-        if (msg) {
-            luaL_traceback(L, L, msg, 1);    
-        }
-        else if (!lua_isnoneornil(L, 1)) {
-            if (!luaL_callmeta(L, 1, "__tostring"))
-            {
-                lua_pushliteral(L, "(No Error Message)");        
-            }
-        }
-        
-        return 1;
-    }
-
-    int setErrorHandler(lua_State *L) {
-        lua_pushcfunction(L, onError);
-        return 1;
-    }
-
-    static HxTraceFun print_fun = 0;
-    static int hx_trace(lua_State *L) {
-        std::stringstream buffer;
-        int n = lua_gettop(L);
-
-        lua_getglobal(L, "tostring");
-
-        for ( int i = 1; i <= n; ++i ) {
-            const char* s = NULL;
-            size_t l = 0;
-            
-            lua_pushvalue(L, -1);
-            lua_pushvalue(L, i);
-            lua_call(L, 1, 1);
-
-            s = lua_tolstring(L, -1, &l);
-            if ( s == NULL ) {
-                return luaL_error(L, LUA_QL("tostring") " must return a string to " LUA_QL("print"));    
-            }
-
-            if ( i>1 ) {
-                buffer << "\t";    
-            }
-
-            buffer << s;
-
-            lua_pop(L, 1);
-        }
-        
-        print_fun(::String(buffer.str().c_str()));
-        return 0;
-    }
-
-    static const struct luaL_Reg printlib [] = {
-        {"print", hx_trace},
-        {NULL, NULL}
-    };
-')
+@:include('ext_lua.hpp')
 extern class Lua
 {
     // lua.h methods
@@ -164,10 +97,8 @@ extern class Lua
     @:native('lua_type')
     static function lua_type(state:Lua_State, idx:Int):LuaType;
 
-    @:functionCode('
-        return ::String(lua_typename(state, tp));
-    ')
-    static function lua_typename(state:Lua_State, tp:Int):String;
+    @:native('lua_typename')
+    static function lua_typename(state:Lua_State, tp:Int):ConstCharStar;
 
     @:native('lua_equal')
     static function lua_equal(state:Lua_State, idx1:Int, idx2:Int):Int;
@@ -192,10 +123,8 @@ extern class Lua
         return _lua_toboolean(state, idx) != 0;
     }
 
-    @:functionCode('
-        return ::String(lua_tolstring(state, idx, len));
-    ')
-    static function lua_tolstring(state:Lua_State, idx:Int, len:Null<RawPointer<SizeT>>):String;
+    @:native('lua_tolstring')
+    static function lua_tolstring(state:Lua_State, idx:Int, len:RawPointer<SizeT>):ConstCharStar;
 
     @:native('lua_objlen')
     static function lua_objlen(state:Lua_State, idx:Int):SizeT;
@@ -229,21 +158,22 @@ extern class Lua
     @:native('lua_pushstring')
     static function lua_pushstring(state:Lua_State, s:ConstCharStar):Void;
 
-    @:functionCode('
-        return ::String(lua_pushvfstring(state, fmt, argp));
-    ')
-    static function lua_pushvfstring(state:Lua_State, fmt:ConstCharStar, argp:VarList):String;
+    @:native('lua_pushvfstring')
+    static function lua_pushvfstring(state:Lua_State, fmt:ConstCharStar, argp:VarList):ConstCharStar;
 
-    @:functionCode('
-        return ::String(lua_pushfstring(state, fmt, argp));
-    ')
-    static function lua_pushfstring(state:Lua_State, fmt:ConstCharStar, argp:VarList):String;
+    @:native('lua_pushfstring')
+    static function lua_pushfstring(state:Lua_State, fmt:ConstCharStar, argp:VarList):ConstCharStar;
 
     @:native('lua_pushcclosure')
     static function lua_pushcclosure(state:Lua_State, fn:Lua_CFunction, n:Int):Void;
 
+    @:noCompletion
     @:native('lua_pushboolean')
-    static function lua_pushboolean(state:Lua_State, b:Int):Void;
+    static function _lua_pushboolean(state:Lua_State, idx:Int):Int;
+
+    static inline function lua_pushboolean(state:Lua_State, idx:Int):Bool {
+        return _lua_pushboolean(state, idx) != 0;
+    }
 
     @:native('lua_pushlightuserdata')
     static function lua_pushlightuserdata(state:Lua_State, p:RawPointer<cpp.Void>):Void;
@@ -354,65 +284,10 @@ extern class Lua
 
     // functions to be called by debugger in specific events
 
-    @:functionCode('
-        lua_Debug dbg;
-        int ret = lua_getstack(state, level, &dbg);
-        ar->__FieldRef(HX_CSTRING("i_ci")) = (int)dbg.i_ci;
-        return ret;
-    ')
+    @:native('ext::lua::getstack')
     static function lua_getstack(state:Lua_State, level:Int, ar:Lua_Custom_Debug):Int;
 
-    @:functionCode('
-        lua_Debug dbg;
-        dbg.i_ci = ar->__FieldRef(HX_CSTRING("i_ci"));
-
-        int ret = lua_getinfo(state, what, &dbg);
-        if (strchr(what, "S")) {
-            if (dbg.source != NULL) {
-                ar->__FieldRef(HX_CSTRING("source")) = ::String(dbg.source);    
-            }
-
-            if (dbg.short_src != NULL) {
-                ar->__FieldRef(HX_CSTRING("short_src")) = ::String(dbg.short_src);    
-            }
-            
-            if (dbg.linedefined != NULL) {
-                ar->__FieldRef(HX_CSTRING("linedefined")) = (int)dbg.linedefined;    
-            }
-            
-            if (dbg.lastlinedefined != NULL) {
-                ar->__FieldRef(HX_CSTRING("lastlinedefined")) = (int)dbg.lastlinedefined;    
-            }
-
-            if (dbg.what != NULL) {
-                ar->__FieldRef(HX_CSTRING("what")) = ::String(dbg.what);    
-            }
-        }
-
-        if (strchr(what, "n")) {
-            if (dbg.name != NULL) {
-                ar->__FieldRef(HX_CSTRING("name")) = ::String(dbg.name);    
-            }
-
-            if (dbg.namewhat != NULL) {
-                ar->__FieldRef(HX_CSTRING("namewhat")) = ::String(dbg.namewhat);    
-            }
-        }
-
-        if (strchr(what, "l")) {
-            if (dbg.currentline != NULL) {
-                ar->__FieldRef(HX_CSTRING("currentline")) = (int)dbg.currentline;    
-            }
-        }
-
-        if (strchr(what, "u")) {
-            if (dbg.nups != NULL) {
-                ar->__FieldRef(HX_CSTRING("nups")) = (int)dbg.nups;    
-            }
-        }
-
-        return ret;
-    ')
+    @:native('ext::lua::getinfo')
     static function lua_getinfo(state:Lua_State, what:ConstCharStar, ar:Lua_Custom_Debug):Int;
 
     @:native('lua_getlocal')
@@ -517,10 +392,8 @@ extern class Lua
     @:native('lua_getglobal')
     static function lua_getglobal(state:Lua_State, s:ConstCharStar):Void;
 
-    @:functionCode('
-        return ::String(lua_tostring(state, i));
-    ')
-    static function lua_tostring(state:Lua_State, i:Int):String;
+    @:native('lua_tostring')
+    static function _lua_tostring(state:Lua_State, i:Int):ConstCharStar;
 
     @:native('lua_open')
     static function lua_open():Lua_State;
@@ -531,21 +404,14 @@ extern class Lua
     @:native('lua_getgccount')
     static function lua_getgccount(state:Lua_State):Int;
 
-    @:functionCode('event_fun = fun')
-    static function lua_set_callbacks_function(fun:cpp.Callable<Lua_State->String->Int>):Void;
+    @:native('ext::callbacks::setcallbacksfunction')
+    static function lua_setcallbacksfunction(fun:cpp.Callable<Lua_State->String->Int>):Void;
 
-    @:functionCode('
-        lua_pushstring(state, name);
-        lua_pushcclosure(state, luaCallback, 1);
-        lua_setglobal(state, name);
-    ')
-    static function lua_add_callback_function(state:Lua_State, name:ConstCharStar):Void;
+    @:native('ext::callbacks::addcallbackfunction')
+    static function lua_addcallbackfunction(state:Lua_State, name:ConstCharStar):Void;
 
-    @:functionCode('
-        lua_pushnil(state);
-        lua_setglobal(state, name);
-    ')
-    static function lua_remove_callback_function(state:Lua_State, name:ConstCharStar):Void;
+    @:native('ext::callbacks::removecallbackfunction')
+    static function lua_removecallbackfunction(state:Lua_State, name:ConstCharStar):Void;
 
     // lauxlib.h methods
 
@@ -567,15 +433,11 @@ extern class Lua
     @:native('luaL_argerror')
     static function luaL_argerror(state:Lua_State, numarg:Int, extramsg:ConstCharStar):Int;
 
-    @:functionCode('
-        return ::String(luaL_checklstring(l, numArg, len));
-    ')
-    static function luaL_checklstring(state:Lua_State, numArg:Int, len:RawPointer<SizeT>):String;
+    @:native('luaL_checklstring')
+    static function luaL_checklstring(state:Lua_State, numArg:Int, len:RawPointer<SizeT>):ConstCharStar;
 
-    @:functionCode('
-        return ::String(luaL_optlstring(state, numArg, def, len));
-    ')
-    static function luaL_optlstring(state:Lua_State, numArg:Int, def:ConstCharStar, len:RawPointer<SizeT>):String;
+    @:native('luaL_optlstring')
+    static function luaL_optlstring(state:Lua_State, numArg:Int, def:ConstCharStar, len:RawPointer<SizeT>):ConstCharStar;
 
     @:native('luaL_checknumber')
     static function luaL_checknumber(state:Lua_State, numArg:Int):Lua_Number;
@@ -607,10 +469,8 @@ extern class Lua
     @:native('luaL_where')
     static function luaL_where(state:Lua_State, lvl:Int):Void;
 
-    @:functionCode('
-        return luaL_error(state,fmt,"");
-    ')
-    static function luaL_error(state:Lua_State, fmt:ConstCharStar):Int;
+    @:native('luaL_error')
+    static function luaL_error(state:Lua_State, fmt:ConstCharStar, argp:VarList):Int;
 
     @:native('luaL_checkoption')
     static function luaL_checkoption(state:Lua_State, narg:Int, def:ConstCharStar, lst:Array<ConstCharStar>):Int;
@@ -633,15 +493,11 @@ extern class Lua
     @:native('luaL_newstate')
     static function luaL_newstate():Lua_State;
 
-    @:functionCode('
-        return ::String(luaL_gsub(state, s, p, r));
-    ')
-    static function luaL_gsub(state:Lua_State, s:ConstCharStar, p:ConstCharStar, r:ConstCharStar):String;
+    @:native('luaL_gsub')
+    static function luaL_gsub(state:Lua_State, s:ConstCharStar, p:ConstCharStar, r:ConstCharStar):ConstCharStar;
 
-    @:functionCode('
-        return ::String(luaL_findtable(state, idx, fname, szhint));
-    ')
-    static function luaL_findtable(state:Lua_State, idx:Int, fname:ConstCharStar, szhint:Int):String;
+    @:native('luaL_findtable')
+    static function luaL_findtable(state:Lua_State, idx:Int, fname:ConstCharStar, szhint:Int):ConstCharStar;
 
     @:native('luaL_fileresult')
     static function luaL_fileresult(state:Lua_State, stat:Int, fname:ConstCharStar):Int;
@@ -673,15 +529,11 @@ extern class Lua
     @:native('luaL_argcheck')
     static function luaL_argcheck(state:Lua_State, cond:Bool, numarg:Int, extramsg:ConstCharStar):Int;
 
-    @:functionCode('
-        return ::String(luaL_checkstring(state, n));
-    ')
-    static function luaL_checkstring(state:Lua_State, n:Int):String;
+    @:native('luaL_checkstring')
+    static function luaL_checkstring(state:Lua_State, n:Int):ConstCharStar;
 
-    @:functionCode('
-        return ::String(luaL_optstring(state, n, d));
-    ')
-    static function luaL_optstring(state:Lua_State, n:Int, d:ConstCharStar):String;
+    @:native('luaL_optstring')
+    static function luaL_optstring(state:Lua_State, n:Int, d:ConstCharStar):ConstCharStar;
 
     @:native('luaL_checkint')
     static function luaL_checkint(state:Lua_State, n:Int):Int;
@@ -695,10 +547,8 @@ extern class Lua
     @:native('luaL_optlong')
     static function luaL_optlong(state:Lua_State, n:Int, d:Lua_Integer):cpp.Int64;
 
-    @:functionCode('
-        return ::String(luaL_typename(state, idx));
-    ')
-    static function luaL_typename(state:Lua_State, idx:Int):String;
+    @:native('luaL_typename')
+    static function luaL_typename(state:Lua_State, idx:Int):ConstCharStar;
 
     @:native('luaL_dofile')
     static function luaL_dofile(state:Lua_State, fn:ConstCharStar):Int;
@@ -730,10 +580,8 @@ extern class Lua
     @:native('luaL_buffinit')
     static function luaL_buffinit(state:Lua_State, B:RawPointer<LuaL_Buffer>):Void;
 
-    @:functionCode('
-        return ::String(luaL_prepbuffer(B));
-    ')
-    static function luaL_prepbuffer(B:RawPointer<LuaL_Buffer>):String;
+    @:native('luaL_prepbuffer')
+    static function luaL_prepbuffer(B:RawPointer<LuaL_Buffer>):RawPointer<Char>;
     
     @:native('luaL_addlstring')
     static function luaL_addlstring(B:RawPointer<LuaL_Buffer>, s:ConstCharStar, l:SizeT):Void;
@@ -801,6 +649,7 @@ extern class Lua
 
     // helpers
 
+    /*
     @:functionCode('
         return ::String(LUA_VERSION);
     ')
@@ -846,25 +695,21 @@ extern class Lua
     ')
     static function jit_copyright():String;
 
-    @:functionCode('
-        return ::String(LUAJIT_URL);
-    ')
+    @:native('LUAJIT_URL')
     static function jit_url():String;
+    */
 
-    @:functionCode('
-        lua_getglobal(state, "_G");
-        luaL_register(state, NULL, printlib);
-        lua_pop(state, 1);
-    ')
-    static function lua_register_hxtrace_lib(state:Lua_State):Void;
+    @:native('ext::hxtrace::registerhxtracelib')
+    static function lua_registerhxtracelib(state:Lua_State):Void;
 
-    @:functionCode('
-        print_fun = f;
-    ')
-    static function lua_register_hxtrace_func(f:cpp.Callable<String->Int>):Void;
+    @:native('ext::hxtrace::registerhxtracefunc')
+    static function lua_registerhxtracefunc(f:cpp.Callable<String->Int>):Void;
 }
 
-typedef Lua_State = RawPointer<_Lua_State>;
+@:include('lua.hpp')
+@:native('::cpp::Reference<lua_State>')
+extern class Lua_State {}
+
 typedef LuaJIT_Profile_Callback = cpp.Callable<(data:RawPointer<cpp.Void>, state:Lua_State, samples:Int, vmstate:Int) -> Void>;
 typedef Lua_CFunction = cpp.Callable<(state:Lua_State) -> Int>;
 typedef Lua_Reader = cpp.Callable<(state:Lua_State, ud:RawPointer<cpp.Void>, sz:RawPointer<SizeT>) -> ConstCharStar>;
